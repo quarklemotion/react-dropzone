@@ -25,9 +25,18 @@ class Dropzone extends React.Component {
   }
 
   componentDidMount() {
+    const { multiple } = this.props;
+
     this.enterCounter = 0;
     // Tried implementing addEventListener, but didn't work out
     document.body.onfocus = this.onFileDialogCancel;
+
+    if (supportMultiple && multiple) {
+      // see https://github.com/okonet/react-dropzone/issues/134#issuecomment-206442049
+      ['webkitdirectory', 'mozdirectory', 'msdirectory', 'odirectory', 'directory'].forEach((attribute) => {
+        this.fileInputEl.setAttribute(attribute, true);
+      });
+    }
   }
 
   componentWillUnmount() {
@@ -106,11 +115,10 @@ class Dropzone extends React.Component {
     this.isFileDialogActive = false;
 
     fileList.forEach((file) => {
-      if (!disablePreview) {
-        file.preview = window.URL.createObjectURL(file); // eslint-disable-line no-param-reassign
-      }
-
       if (this.fileAccepted(file) && this.fileMatchSize(file)) {
+        if (!disablePreview) {
+          file.preview = window.URL.createObjectURL(file); // eslint-disable-line no-param-reassign
+        }
         acceptedFiles.push(file);
       } else {
         rejectedFiles.push(file);
@@ -121,11 +129,10 @@ class Dropzone extends React.Component {
       onDrop.call(this, acceptedFiles, rejectedFiles, e);
     }
 
-    if (rejectedFiles.length > 0 && onDropRejected) {
+    if (onDropRejected && rejectedFiles.length) {
       onDropRejected.call(this, rejectedFiles, e);
     }
-
-    if (acceptedFiles.length > 0 && onDropAccepted) {
+    if (onDropAccepted && acceptedFiles.length) {
       onDropAccepted.call(this, acceptedFiles, e);
     }
 
@@ -134,6 +141,7 @@ class Dropzone extends React.Component {
       isDragActive: false,
       isDragReject: false
     });
+    return false;
   }
 
   onClick(e) {

@@ -202,9 +202,9 @@ describe('Dropzone', () => {
         get: (target, prop) => {
           switch (prop) {
             case 'dataTransfer':
-              throw new Error('IE does not support rrror');
+              throw new Error('IE does not support error');
             default:
-              return function () {};
+              return function foo() {};
           }
         }
       });

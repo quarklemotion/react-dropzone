@@ -1,6 +1,7 @@
 {
   "name": "react-dropzone",
   "description": "Simple HTML5 drag-drop zone with React.js",
+  "version": "3.9.1",
   "main": "dist/index.js",
   "scripts": {
     "clean": "rimraf ./dist",

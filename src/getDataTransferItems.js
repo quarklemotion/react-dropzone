@@ -1,3 +1,64 @@
+function readEntries(directory, callback, readerSupplied) {
+  let entries = [];
+  // reader should not be present on initial call
+  const reader = readerSupplied || directory.createReader();
+
+  return reader.readEntries((results) => {
+    const toArray = obj => Array.prototype.slice.call(obj || [], 0);
+
+    if (!results.length) {
+      return callback(null, entries);
+    }
+
+    entries = entries.concat(toArray(results));
+    return this.readEntries(directory, (err, additionalEntries) => {
+      if (err) {
+        return callback(err);
+      }
+
+      entries = entries.concat(additionalEntries);
+      return callback(null, entries);
+    }, reader);
+  }, callback);
+}
+
+function walkDirectory(directory, callback) {
+  let results = [];
+
+  if (directory === null) {
+    return callback(results);
+  }
+
+  return readEntries(directory, (err, result) => {
+    if (err) {
+      return callback(err);
+    }
+
+    const entries = result.slice();
+
+    const processEntry = () => {
+      const current = entries.shift();
+
+      if (current === undefined) {
+        return callback(results);
+      }
+
+      if (current.isDirectory) {
+        return walkDirectory(current, (nestedResults) => {
+          results = results.concat(nestedResults);
+          processEntry();
+        });
+      }
+
+      return current.file((file) => {
+        results.push(file);
+        return processEntry();
+      }, processEntry);
+    };
+    return processEntry();
+  });
+}
+
 export default function getDataTransferFiles(event, isMultipleAllowed = true) {
   let dataTransferItemsList = [];
   if (event.dataTransfer) {
@@ -13,10 +74,23 @@ export default function getDataTransferFiles(event, isMultipleAllowed = true) {
     dataTransferItemsList = event.target.files;
   }
 
-  if (dataTransferItemsList.length > 0) {
-    dataTransferItemsList = isMultipleAllowed ? dataTransferItemsList : [dataTransferItemsList[0]];
+  let flattenedDataTransferItems = [];
+  Array.prototype.slice.call(dataTransferItemsList).forEach((listItem) => {
+    if (typeof listItem.webkitGetAsEntry === 'function') {
+      const entry = listItem.webkitGetAsEntry();
+
+      walkDirectory(entry.filesystem.root, (walkedFiles) => {
+        flattenedDataTransferItems.push(walkedFiles);
+      });
+    } else {
+      flattenedDataTransferItems.push(listItem);
+    }
+  });
+
+  if (flattenedDataTransferItems.length > 0) {
+    flattenedDataTransferItems = isMultipleAllowed ? flattenedDataTransferItems : [flattenedDataTransferItems[0]];
   }
 
   // Convert from DataTransferItemsList to the native Array
-  return Array.prototype.slice.call(dataTransferItemsList);
+  return flattenedDataTransferItems;
 }
