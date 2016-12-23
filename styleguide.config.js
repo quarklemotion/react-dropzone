@@ -1,5 +1,3 @@
-const webpackConfig = require('./webpack.config.js');
-
 module.exports = {
   title: 'react-dropzone',
   showCode: true,
@@ -14,8 +12,8 @@ module.exports = {
       components: './src/index.js'
     }
   ],
-  updateWebpackConfig() {
-    delete webpackConfig.externals;
-    return webpackConfig;
+  updateWebpackConfig(config) {
+    delete config.externals; // eslint-disable-line
+    return config;
   }
 };
