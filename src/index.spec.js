@@ -165,19 +165,23 @@ describe('Dropzone', () => {
     it('should override onDrag* methods', () => {
       const dragStartSpy = spy();
       const dragEnterSpy = spy();
+      const dragOverSpy = spy();
       const dragLeaveSpy = spy();
       const component = mount(
         <Dropzone
           onDragStart={dragStartSpy}
           onDragEnter={dragEnterSpy}
+          onDragOver={dragOverSpy}
           onDragLeave={dragLeaveSpy}
         />
       );
       component.simulate('dragStart');
       component.simulate('dragEnter', { dataTransfer: { items: files } });
+      component.simulate('dragOver', { dataTransfer: { items: files } });
       component.simulate('dragLeave', { dataTransfer: { items: files } });
       expect(dragStartSpy.callCount).toEqual(1);
       expect(dragEnterSpy.callCount).toEqual(1);
+      expect(dragOverSpy.callCount).toEqual(1);
       expect(dragLeaveSpy.callCount).toEqual(1);
     });
 
@@ -538,13 +542,14 @@ describe('Dropzone', () => {
   });
 
   describe('preview', () => {
-    it.skip('should not generate previews for non-images', () => {
+    it('should generate previews for non-images', () => {
       const dropSpy = spy();
       const dropzone = mount(
         <Dropzone onDrop={dropSpy} />
       );
       dropzone.simulate('drop', { dataTransfer: { files } });
-      expect(Object.keys(dropSpy.firstCall.args[0][0])).not.toContain('preview');
+      expect(Object.keys(dropSpy.firstCall.args[0][0])).toContain('preview');
+      expect(dropSpy.firstCall.args[0][0].preview).toContain('data://file1.pdf');
     });
 
     it('should generate previews for images', () => {

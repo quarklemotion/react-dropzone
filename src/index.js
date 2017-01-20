@@ -67,6 +67,10 @@ class Dropzone extends React.Component {
     } catch (err) {
       // continue regardless of error
     }
+
+    if (this.props.onDragOver) {
+      this.props.onDragOver.call(this, e);
+    }
     return false;
   }
 
@@ -102,7 +106,7 @@ class Dropzone extends React.Component {
     this.isFileDialogActive = false;
 
     fileList.forEach((file) => {
-      if (!disablePreview && accepts(file, 'image/*')) {
+      if (!disablePreview) {
         file.preview = window.URL.createObjectURL(file); // eslint-disable-line no-param-reassign
       }
 
@@ -407,7 +411,13 @@ Dropzone.propTypes = {
   /**
    * onDragLeave callback
    */
+
   onDragLeave: React.PropTypes.func,
+  
+  /**
+   * onDragOver callback
+   */
+  onDragOver: React.PropTypes.func,
 
   /**
    * Provide a callback on clicking the cancel button of the file dialog
